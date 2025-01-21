@@ -21,7 +21,7 @@ model User {
   password  String
   roleId    Int
   role      Role         @relation(fields: [roleId], references: [id])
-  
+  amount    Float        @default(0)
   transactions Transaction[]
 }
 

@@ -21,13 +21,14 @@ export const userService = {
         });
     },
 
-    createUsers: async (name: string, email: string, password: string, phone: string, roleId: number) => {
+    createUsers: async (name: string, email: string, password: string, phone: string, roleId: number, amount: number = 0) => {
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
                 password,
                 phone,
+                amount,
                 role: {
                     connect: { id: roleId },
                 },
@@ -40,7 +41,7 @@ export const userService = {
         return user;
     },
 
-    updateUsers: async (id: number, name?: string, email?: string, password?: string, phone?: string, roleId?: number) => {
+    updateUsers: async (id: number, name?: string, email?: string, password?: string, phone?: string, roleId?: number, amount?: number) => {
         const userId = Number(id);
         const user = await prisma.user.update({
             where: { id: userId },
@@ -49,6 +50,7 @@ export const userService = {
                 email,
                 password: password ? password : undefined,
                 phone,
+                amount: amount !== undefined ? amount : undefined,
                 role: roleId ? { connect: { id: roleId } } : undefined, 
             },
             include: {
@@ -62,14 +64,13 @@ export const userService = {
     deleteUsers: async (id: number) => {
         const userId = Number(id);
         if (isNaN(userId)) {
-            throw new Error("El ID del usuario no es un numero valido")
+            throw new Error("El ID del usuario no es un número válido");
         }
         const user = await prisma.user.delete({
             where: {
                 id: userId
             }
-        })
+        });
         return user;
     }
-
 }

@@ -8,6 +8,7 @@ export const usersTypeDefs = gql`
     email: String!
     password: String!
     phone: String!
+    amount: Float!
     role: Role!
     transactions: [Transaction!]!
   }
@@ -18,9 +19,9 @@ export const usersTypeDefs = gql`
   }
 
   type Mutation {
-    createUser(name: String!, email: String!, password: String!, phone: String!, roleId: Int!): User!
-    updateUser(id: ID!, name: String, email: String, password: String, phone: String, roleId: Int): User!
-    deleteUser(id: ID!): User!
+    createUser(name: String!, email: String!, phone: String!, password: String!, roleId: Int!, amount: Float!): User!
+    updateUser(id: Int!, name: String, email: String, phone: String, password: String, roleId: Int, amount: Float): User!
+    deleteUser(id: Int!): User!
   }
 
 `;
