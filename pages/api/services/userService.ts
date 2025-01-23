@@ -33,10 +33,6 @@ export const userService = {
                     connect: { id: roleId },
                 },
             },
-            include: {
-                role: true,
-                transactions: true,
-            }
         });
         return user;
     },
@@ -51,7 +47,7 @@ export const userService = {
                 password: password ? password : undefined,
                 phone,
                 amount: amount !== undefined ? amount : undefined,
-                role: roleId ? { connect: { id: roleId } } : undefined, 
+                role: roleId ? { connect: { id: roleId } } : undefined,
             },
             include: {
                 role: true,

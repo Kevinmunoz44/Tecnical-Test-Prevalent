@@ -6,6 +6,7 @@ CREATE TABLE "User" (
     "phone" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "roleId" INTEGER NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
