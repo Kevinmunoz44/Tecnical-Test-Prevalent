@@ -13,7 +13,11 @@ export const transactionsResolvers = {
     },
     Mutation: {
         // Crear una nueva transacción
-        createTransaction: async (_: unknown, { concept, amount, transactionType, userId }: { concept: string, amount: number, transactionType: string, userId: number }) => {
+        createTransaction: async (_: unknown, { concept, amount, transactionType, userId }: { concept: string, amount: number, transactionType: string, userId: number }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await transactionService.createTransaction(
                     concept, amount, transactionType, userId
@@ -24,7 +28,11 @@ export const transactionsResolvers = {
             }
         },
         // Actualizar una transacción
-        updateTransaction: async (_: unknown, { id, concept, amount, transactionType }: { id: number, concept?: string, amount?: number, transactionType?: string }) => {
+        updateTransaction: async (_: unknown, { id, concept, amount, transactionType }: { id: number, concept?: string, amount?: number, transactionType?: string }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await transactionService.updateTransaction(
                     id, concept, amount, transactionType
@@ -35,7 +43,11 @@ export const transactionsResolvers = {
             }
         },
         // Eliminar una transacción
-        deleteTransaction: async (_: unknown, { id }: { id: number }) => {
+        deleteTransaction: async (_: unknown, { id }: { id: number }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await transactionService.deleteTransaction(id);
             } catch (err) {

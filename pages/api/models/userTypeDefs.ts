@@ -13,6 +13,11 @@ export const usersTypeDefs = gql`
     transactions: [Transaction!]!
   }
 
+  type AuthPayload {
+    token: String! 
+    user: User!   
+  }
+
   type Query {
     users: [User!]!
     user(id: ID!): User
@@ -20,6 +25,7 @@ export const usersTypeDefs = gql`
 
   type Mutation {
     createUser(name: String!, email: String!, phone: String!, password: String!, roleId: Int!, amount: Float!): User!
+    login(email: String!, password: String!): AuthPayload!
     updateUser(id: Int!, name: String, email: String, phone: String, password: String, roleId: Int, amount: Float): User!
     deleteUser(id: Int!): User!
   }

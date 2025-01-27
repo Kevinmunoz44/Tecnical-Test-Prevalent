@@ -14,7 +14,11 @@ export const rolesResolvers = {
 
     Mutation: {
         // Crear un nuevo rol
-        createRole: async (_: unknown, { name }: { name: string }) => {
+        createRole: async (_: unknown, { name }: { name: string }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await roleService.createRole(name);
             } catch (error) {
@@ -23,7 +27,11 @@ export const rolesResolvers = {
             }
         },
         // Actualizar un rol
-        updateRole: async (_: unknown, { id, name }: { id: number, name: string }) => {
+        updateRole: async (_: unknown, { id, name }: { id: number, name: string }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await roleService.updateRole(id, name);
             } catch (err) {
@@ -32,7 +40,11 @@ export const rolesResolvers = {
             }
         },
         // Eliminar un rol
-        deleteRole: async (_: unknown, { id }: { id: number }) => {
+        deleteRole: async (_: unknown, { id }: { id: number }, context: any) => {
+            // const user = context.user;
+            // if(!user || user.role !== "admin"){
+            //     throw new Error("Usuario no autorizado");
+            // }
             try {
                 return await roleService.deleteRole(id);
             } catch (err) {

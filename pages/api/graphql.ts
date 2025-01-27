@@ -7,7 +7,9 @@ import { rolesTypeDefs } from './models/roleTypeDefs'
 import { transactionTypeDefs } from './models/transactionTypeDefs'
 import { usersTypeDefs } from './models/userTypeDefs'
 import { runMiddleware } from '../api/middleware/runMiddleware'
+import { authService } from './services/authService';
 import Cors from 'cors';
+
 
 const typeDefs = mergeTypeDefs([rolesTypeDefs, usersTypeDefs, transactionTypeDefs]);
 
@@ -27,6 +29,19 @@ const resolvers = {
 const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
+  context: ({ req }) => {
+    const token = req.headers.authorization?.split(' ')[1] || null;
+    let user = null;
+
+    if (token) {
+      try {
+        user = authService.verifyToken(token);
+      } catch (err) {
+        console.error('Error verificando el token:', err.message);
+      }
+    }
+    return { user };
+  },
 });
 
 export const config = {
@@ -35,7 +50,7 @@ export const config = {
   },
 };
 
-// Configuración del middleware CORS
+
 const cors = Cors({
   origin: ['https://studio.apollographql.com', 'http://localhost:3000'],
   credentials: true,

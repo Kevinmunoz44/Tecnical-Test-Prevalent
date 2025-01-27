@@ -1,4 +1,5 @@
 import { userService } from '../services/userService';
+import { authService } from '../services/authService';
 
 export const usersResolvers = {
     Query: {
@@ -20,12 +21,35 @@ export const usersResolvers = {
                     name, email, password, phone, roleId
                 );
             } catch (err) {
-                if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-                    throw new Error("El correo ingresado ya esta registrado");
-                }
-                throw err;
+                throw new Error("Error al registrar usuario" + err);
             }
         },
+
+        login: async (_: unknown, { email, password }: { email: string; password: string }) => {
+            // Busca al usuario por email
+            const user = await userService.getUserByEmail(email);
+      
+            if (!user) {
+              throw new Error('Usuario no encontrado');
+            }
+      
+            // Verifica la contraseña usando bcrypt
+            const isValidPassword = await userService.verifyPassword(password, user.password);
+      
+            if (!isValidPassword) {
+              throw new Error('Credenciales incorrectas');
+            }
+      
+            // Verifica si el usuario tiene un rol asignado
+            if (!user.role) {
+              throw new Error('El usuario no tiene un rol asignado');
+            }
+      
+            // Genera el token JWT
+            const token = authService.generateToken(user.id, user.role.name);
+      
+            return { token, user };
+          },
 
         // Actualizar un usuario
         updateUser: async (_: unknown, { id, name, email, password, phone, roleId }: { id: number, name?: string, email?: string, password?: string, phone?: string, roleId?: number }) => {
