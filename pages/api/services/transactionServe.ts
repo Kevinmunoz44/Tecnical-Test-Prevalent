@@ -18,7 +18,7 @@ export const transactionService = {
         });
     },
 
-    createTransaction: async (concept: string, amount: number, transactionType: string, userId: number) => {
+    createTransaction: async (concept: string, amount: number, date: string, transactionType: string, userId: number) => {
         const transactionAmount = transactionType === "Ingreso" ? amount : -amount;
 
         const user = await prisma.user.findUnique({
@@ -37,6 +37,7 @@ export const transactionService = {
             data: {
                 concept,
                 amount,
+                date,
                 transactionType,
                 user: {
                     connect: { id: userId },  
@@ -57,7 +58,7 @@ export const transactionService = {
         return transaction;
     },
 
-    updateTransaction: async (id: number, concept?: string, amount?: number, transactionType?: string) => {
+    updateTransaction: async (id: number, concept?: string, amount?: number, date?: string, transactionType?: string) => {
         const transactionId = Number(id);
 
         const existingTransaction = await prisma.transaction.findUnique({
@@ -97,6 +98,7 @@ export const transactionService = {
             data: {
                 concept,
                 amount,
+                date,
                 transactionType,
             },
             include: {

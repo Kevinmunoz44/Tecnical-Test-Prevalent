@@ -1,14 +1,24 @@
 import Sidebar from "./sidebar";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { useMutation } from "@apollo/client";
+import { CREATE_TRANSACTION } from "../graphql/mutationTransaction";
+import { AuthContext } from "./AuthContext"; // Importamos el AuthContext
 
-const NewTransaction = () => {
+const FormTransaction = () => {
+  const { user } = useContext(AuthContext); // Obtenemos el usuario autenticado desde el contexto
   const [formData, setFormData] = useState({
-    monto: "",
-    concepto: "",
-    fecha: "",
+    amount: "",
+    concept: "",
+    date: "",
+    transactionType: "Ingreso", // Valor inicial para el tipo de transacción
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Hook para ejecutar la mutación de creación
+  const [createTransaction, { loading: creating, error: createError }] =
+    useMutation(CREATE_TRANSACTION);
+
+  // Manejar los cambios en el formulario
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
@@ -16,15 +26,39 @@ const NewTransaction = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Manejar el envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Nueva transacción:", formData);
 
-    // Aquí puedes llamar a tu backend para crear la transacción
-    // Ejemplo:
-    // await fetch("/api/transactions", { method: "POST", body: JSON.stringify(formData) });
+    if (!user) {
+      alert("Usuario no autenticado.");
+      return;
+    }
 
-    alert("Transacción creada exitosamente");
+    try {
+      const response = await createTransaction({
+        variables: {
+          concept: formData.concept,
+          amount: parseFloat(formData.amount),
+          date: formData.date,
+          transactionType: formData.transactionType,
+          userId: user.id, // Tomamos el userId del usuario autenticado
+        },
+      });
+
+      if (response.data) {
+        alert("Transacción creada exitosamente");
+        // Reiniciar el formulario
+        setFormData({
+          amount: "",
+          concept: "",
+          date: "",
+          transactionType: "Ingreso",
+        });
+      }
+    } catch (err) {
+      console.error("Error al crear transacción:", err);
+    }
   };
 
   return (
@@ -42,14 +76,14 @@ const NewTransaction = () => {
           className="bg-gray-100 p-6 rounded-lg shadow-md max-w-md mx-auto"
         >
           <div className="mb-4">
-            <label htmlFor="monto" className="block text-gray-700 font-semibold mb-2">
+            <label htmlFor="amount" className="block text-gray-700 font-semibold mb-2">
               Monto
             </label>
             <input
               type="number"
-              id="monto"
-              name="monto"
-              value={formData.monto}
+              id="amount"
+              name="amount"
+              value={formData.amount}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
@@ -57,14 +91,14 @@ const NewTransaction = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="concepto" className="block text-gray-700 font-semibold mb-2">
+            <label htmlFor="concept" className="block text-gray-700 font-semibold mb-2">
               Concepto
             </label>
             <input
               type="text"
-              id="concepto"
-              name="concepto"
-              value={formData.concepto}
+              id="concept"
+              name="concept"
+              value={formData.concept}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
@@ -72,30 +106,54 @@ const NewTransaction = () => {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="fecha" className="block text-gray-700 font-semibold mb-2">
+            <label htmlFor="date" className="block text-gray-700 font-semibold mb-2">
               Fecha
             </label>
             <input
               type="date"
-              id="fecha"
-              name="fecha"
-              value={formData.fecha}
+              id="date"
+              name="date"
+              value={formData.date}
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="transactionType" className="block text-gray-700 font-semibold mb-2">
+              Tipo de Transacción
+            </label>
+            <select
+              id="transactionType"
+              name="transactionType"
+              value={formData.transactionType}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            >
+              <option value="Ingreso">Ingreso</option>
+              <option value="Egreso">Egreso</option>
+            </select>
           </div>
 
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            disabled={creating}
           >
-            Ingresar
+            {creating ? "Creando..." : "Ingresar"}
           </button>
+
+          {createError && (
+            <p className="mt-4 text-red-500">
+              Error al crear la transacción: {createError.message}
+            </p>
+          )}
         </form>
       </div>
     </div>
   );
 };
 
-export default NewTransaction;
+export default FormTransaction;

@@ -1,12 +1,20 @@
 import React from "react";
 import Sidebar from "./sidebar";
+import { useQuery } from "@apollo/client";
+import { GET_USERS } from "../graphql/queriesUser";
 
 const TableUser = () => {
-  // Ejemplo de datos de usuarios
-  const users = [
-    { nombre: "John Doe", correo: "test@test.com", telefono: "3245432", id: 1 },
-    { nombre: "Jane Smith", correo: "jane@smith.com", telefono: "9876543", id: 2 },
-  ];
+  // Hook de Apollo para ejecutar la consulta GET_USERS
+  const { data, loading, error } = useQuery(GET_USERS);
+
+  // Mensaje de carga
+  if (loading) return <p>Cargando usuarios...</p>;
+
+  // Manejo de errores
+  if (error) return <p>Error al cargar los usuarios: {error.message}</p>;
+
+  // Usuarios obtenidos del backend
+  const users = data.users;
 
   // Función para manejar la edición
   const handleEdit = (id: number) => {
@@ -17,7 +25,7 @@ const TableUser = () => {
   // Función para manejar la eliminación
   const handleDelete = (id: number) => {
     console.log(`Eliminar usuario con ID: ${id}`);
-    // Aquí puedes agregar lógica para eliminar el usuario
+    // Aquí puedes implementar la lógica para eliminar un usuario
     alert(`Usuario con ID ${id} eliminado.`);
   };
 
@@ -43,15 +51,17 @@ const TableUser = () => {
                 <th className="border border-gray-300 py-2 px-4 text-left">Nombre</th>
                 <th className="border border-gray-300 py-2 px-4 text-left">Correo</th>
                 <th className="border border-gray-300 py-2 px-4 text-left">Teléfono</th>
+                <th className="border border-gray-300 py-2 px-4 text-left">Rol</th>
                 <th className="border border-gray-300 py-2 px-4 text-left">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {users.map((user: any) => (
                 <tr key={user.id} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 py-2 px-4">{user.nombre}</td>
-                  <td className="border border-gray-300 py-2 px-4">{user.correo}</td>
-                  <td className="border border-gray-300 py-2 px-4">{user.telefono}</td>
+                  <td className="border border-gray-300 py-2 px-4">{user.name}</td>
+                  <td className="border border-gray-300 py-2 px-4">{user.email}</td>
+                  <td className="border border-gray-300 py-2 px-4">{user.phone}</td>
+                  <td className="border border-gray-300 py-2 px-4">{user.role.name}</td>
                   <td className="border border-gray-300 py-2 px-4">
                     {/* Botón Editar */}
                     <button

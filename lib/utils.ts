@@ -1,6 +1,8 @@
-// import { type ClassValue, clsx } from "clsx"
-// import { twMerge } from "tailwind-merge"
+import { ApolloClient, InMemoryCache } from "@apollo/client";
 
-// export function cn(...inputs: ClassValue[]) {
-//   return twMerge(clsx(inputs))
-// }
+const client = new ApolloClient({
+  uri: "http://localhost:3000/api/graphql",
+  cache: new InMemoryCache(),
+});
+
+export default client;

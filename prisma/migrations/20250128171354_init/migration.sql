@@ -24,6 +24,7 @@ CREATE TABLE "Transaction" (
     "id" SERIAL NOT NULL,
     "concept" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
+    "date" TEXT NOT NULL,
     "transactionType" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
 

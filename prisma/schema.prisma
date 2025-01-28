@@ -35,9 +35,9 @@ model Transaction {
   id              Int     @id @default(autoincrement())
   concept         String
   amount          Float
+  date            String
   transactionType String
   userId          Int
-
   user            User    @relation(fields: [userId], references: [id])
 }
 

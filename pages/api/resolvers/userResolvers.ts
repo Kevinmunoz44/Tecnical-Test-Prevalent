@@ -1,5 +1,8 @@
 import { userService } from '../services/userService';
 import { authService } from '../services/authService';
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 export const usersResolvers = {
     Query: {
@@ -11,6 +14,23 @@ export const usersResolvers = {
         user: async (_: unknown, { id }: { id: number }) => {
             return await userService.getUserById(id);
         },
+
+        currentUser: async (_: unknown, __: unknown, context: any) => {
+            const { user } = context; // Usuario obtenido del contexto
+            if (!user) {
+              throw new Error("Usuario no autenticado");
+            }
+        
+            const currentUser = await prisma.user.findUnique({
+              where: { id: user.userId }, // Buscar el usuario por su ID
+            });
+        
+            if (!currentUser) {
+              throw new Error("Usuario no encontrado");
+            }
+        
+            return currentUser;
+          },
     },
     
     Mutation: {

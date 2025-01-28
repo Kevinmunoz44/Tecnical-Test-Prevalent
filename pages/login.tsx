@@ -1,12 +1,29 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useContext } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
+import { AuthContext } from "./AuthContext";
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+
+export const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
+      token
+      user {
+        id
+        name
+        email
+      }
+    }
+  }
+`;
 
 const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const router = useRouter();
+  const auth = useContext(AuthContext);
+
+  const [loginMutation, { loading, error: mutationError }] = useMutation(LOGIN_MUTATION);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -15,34 +32,19 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/graphql", {
-        query: `
-          mutation {
-            login(email: "${form.email}", password: "${form.password}") {
-              token
-              user {
-                id
-                name
-                email
-              }
-            }
-          }
-        `,
+      const { data } = await loginMutation({
+        variables: { email: form.email, password: form.password },
       });
 
-      if (response.data.errors) {
-        throw new Error(response.data.errors[0].message);
-      }
+      const { token, user } = data.login;
 
-      const { token } = response.data.data.login;
-
-      // Guardar el token en localStorage
-      localStorage.setItem("token", token);
+      // Llama a la función login de tu contexto para manejar el estado global
+      auth?.login(token, user);
 
       alert("Inicio de sesión exitoso.");
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Error desconocido");
+      setError(mutationError?.message || "Error desconocido");
     }
   };
 
@@ -81,15 +83,10 @@ const Login = () => {
         <button
           type="submit"
           className="bg-blue-500 text-white py-2 px-4 rounded-lg w-full hover:bg-blue-600"
+          disabled={loading}
         >
-          Iniciar Sesión
+          {loading ? "Iniciando..." : "Iniciar Sesión"}
         </button>
-        <p className="text-center text-gray-600 mt-4">
-          ¿No tienes cuenta?{" "}
-          <Link href="/register" className="text-blue-500 hover:underline">
-            Regístrate aquí
-          </Link>
-        </p>
       </form>
     </div>
   );

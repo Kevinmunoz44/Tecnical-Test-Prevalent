@@ -17,8 +17,8 @@ export const transactionTypeDefs = gql`
   }
 
   type Mutation {
-    createTransaction(concept: String!, amount: Float!, transactionType: String!, userId: Int!): Transaction!
-    updateTransaction(id: ID!, concept: String, amount: Float, transactionType: String): Transaction!
+    createTransaction(concept: String!, amount: Float!, date: String! transactionType: String!, userId: Int!): Transaction!
+    updateTransaction(id: ID!, concept: String, amount: Float, date: String! transactionType: String): Transaction!
     deleteTransaction(id: ID!): Transaction!
   }
 

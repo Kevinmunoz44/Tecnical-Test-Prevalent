@@ -1,16 +1,22 @@
 import React from "react";
 import Sidebar from "./sidebar";
 import Link from "next/link";
+import { useQuery } from "@apollo/client";
+import { GET_TRANSACTIONS } from "../graphql/queriesTransaction";
 
 const TableTransaction = () => {
-  const transactions = [
-    { concepto: "Pago de renta", monto: 500, fecha: "2025-01-01", usuario: "Juan" },
-    { concepto: "Salario", monto: 2000, fecha: "2025-01-15", usuario: "Juan" },
-    { concepto: "Compra de alimentos", monto: -150, fecha: "2025-01-20", usuario: "Juan" },
-  ];
+  const { data, loading, error } = useQuery(GET_TRANSACTIONS);
 
-  // Calcular el total de ingresos y egresos
-  const total = transactions.reduce((acc, transaction) => acc + transaction.monto, 0);
+  if (loading) return <p>Cargando transacciones...</p>;
+  if (error) return <p>Error al cargar las transacciones: {error.message}</p>;
+
+  const transactions = data.transactions;
+
+  // Calcular el monto total del usuario
+  const total = transactions.reduce(
+    (acc: number, transaction: any) => acc + transaction.amount,
+    0
+  );
 
   return (
     <div className="flex h-screen">
@@ -21,9 +27,9 @@ const TableTransaction = () => {
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold mb-4">Sistema de gestión de Ingresos y Gastos</h1>
 
-        {/* Botón "Nuevo" */}
+        {/* Encabezado con botón "Nuevo" */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold underline">Ingresos y egresos</h2>
+          <h2 className="text-lg font-semibold underline">Transacciones</h2>
           <Link
             href="/formTransaction"
             className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
@@ -44,18 +50,18 @@ const TableTransaction = () => {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((transaction, index) => (
-                <tr key={index} className="hover:bg-gray-100">
-                  <td className="border border-gray-300 py-2 px-4">{transaction.concepto}</td>
+              {transactions.map((transaction: any) => (
+                <tr key={transaction.id} className="hover:bg-gray-100">
+                  <td className="border border-gray-300 py-2 px-4">{transaction.concept}</td>
                   <td
                     className={`border border-gray-300 py-2 px-4 ${
-                      transaction.monto < 0 ? "text-red-500" : "text-green-500"
+                      transaction.amount < 0 ? "text-red-500" : "text-green-500"
                     }`}
                   >
-                    ${transaction.monto}
+                    ${transaction.amount}
                   </td>
-                  <td className="border border-gray-300 py-2 px-4">{transaction.fecha}</td>
-                  <td className="border border-gray-300 py-2 px-4">{transaction.usuario}</td>
+                  <td className="border border-gray-300 py-2 px-4">{transaction.date}</td>
+                  <td className="border border-gray-300 py-2 px-4">{transaction.user.name}</td>
                 </tr>
               ))}
             </tbody>

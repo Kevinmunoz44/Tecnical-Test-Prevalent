@@ -1,11 +1,14 @@
 import "../styles/globals.css";
-import type { AppProps } from "next/app";
-import { UserProvider } from '@auth0/nextjs-auth0/client';
+import { ApolloProvider } from "@apollo/client";
+import client from "../lib/utils";
+import { AuthProvider } from "./AuthContext";
 
-export default function App({ Component, pageProps }: AppProps) {
+export default function App({ Component, pageProps }: any) {
     return (
-        <UserProvider>
-            <Component {...pageProps} />
-        </UserProvider>
+        <ApolloProvider client={client}>
+            <AuthProvider>
+                <Component {...pageProps} />
+            </AuthProvider>
+        </ApolloProvider>
     );
 }

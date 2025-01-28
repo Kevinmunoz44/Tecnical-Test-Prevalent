@@ -1,19 +1,22 @@
-import { authService } from '../services/authService';
+import { authService } from "../services/authService";
+import { PrismaClient } from "@prisma/client";
 
-export const authMiddleware = async (req, res, next) => {
+const prisma = new PrismaClient();
+
+export const createContext = ({ req }: any) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ message: 'Autenticación requerida' });
+    return { user: null };
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = authService.verifyToken(token);
-    req.user = decoded;
-    next();
+    const decoded: any = authService.verifyToken(token);
+    return { user: decoded }; 
   } catch (err) {
-    res.status(403).json({ message: 'No autorizado' });
+    console.error("Error al verificar el token:", err.message);
+    return { user: null };
   }
 };
