@@ -3,23 +3,23 @@ import { transactionService } from '../services/transactionServe';
 export const transactionsResolvers = {
   Query: {
     // Obtener todas las transacciones del usuario autenticado
-    transactions: async (_: unknown, __: unknown) => {
-    //   const { user } = context; // Obtenemos el usuario autenticado del contexto
-    //   if (!user) {
-    //     throw new Error("Usuario no autenticado");
-    //   }
+    transactions: async (_: unknown, __: unknown, context: any) => {
+      const { user } = context;
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
 
-      return await transactionService.getAllTransactions();
+      return await transactionService.getAllTransactions(user.userId);
     },
 
     // Obtener una transacción específica del usuario autenticado
-    transaction: async (_: unknown, { id }: { id: number }) => {
-    //   const { user } = context; // Obtenemos el usuario autenticado del contexto
-    //   if (!user) {
-    //     throw new Error("Usuario no autenticado");
-    //   }
+    transaction: async (_: unknown, { id }: { id: number }, context: any) => {
+      const { user } = context;
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
 
-      return await transactionService.getTransactionById(id);
+      return await transactionService.getTransactionById(id, user.userId);
     },
   },
 
@@ -55,7 +55,7 @@ export const transactionsResolvers = {
         throw new Error("Usuario no autenticado");
       }
 
-      const transaction = await transactionService.getTransactionById(id);
+      const transaction = await transactionService.getTransactionById(id, { userId: user.userId });
 
       if (!transaction) {
         throw new Error("Transacción no encontrada o no autorizada");
@@ -71,7 +71,7 @@ export const transactionsResolvers = {
         throw new Error("Usuario no autenticado");
       }
 
-      const transaction = await transactionService.getTransactionById(id);
+      const transaction = await transactionService.getTransactionById(id, { userId: user.userId });
 
       if (!transaction) {
         throw new Error("Transacción no encontrada o no autorizada");

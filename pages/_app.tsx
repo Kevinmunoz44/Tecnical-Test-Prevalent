@@ -1,14 +1,21 @@
 import "../styles/globals.css";
-import { ApolloProvider } from "@apollo/client";
-import client from "../lib/utils";
-import { AuthProvider } from "./AuthContext";
+import { AuthProvider, ProtectedRoute } from "./AuthContext";
+import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }: any) {
-    return (
-        <ApolloProvider client={client}>
-            <AuthProvider>
-                <Component {...pageProps} />
-            </AuthProvider>
-        </ApolloProvider>
-    );
+  const router = useRouter();
+  const publicRoutes = ["/login", "/register"];
+  const isAuthRequired = !publicRoutes.includes(router.pathname); // 🔥 No proteger login y register
+
+  return (
+    <AuthProvider>
+      {isAuthRequired ? (
+        <ProtectedRoute>
+          <Component {...pageProps} />
+        </ProtectedRoute>
+      ) : (
+        <Component {...pageProps} />
+      )}
+    </AuthProvider>
+  );
 }

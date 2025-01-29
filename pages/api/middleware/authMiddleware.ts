@@ -14,7 +14,13 @@ export const createContext = ({ req }: any) => {
 
   try {
     const decoded: any = authService.verifyToken(token);
-    return { user: decoded }; 
+    
+    if (!decoded.userId) {
+      console.error("El token no contiene userId");
+      return { user: null };
+    }
+
+    return { user: { userId: decoded.userId, role: decoded.role } };
   } catch (err) {
     console.error("Error al verificar el token:", err.message);
     return { user: null };

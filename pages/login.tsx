@@ -1,5 +1,6 @@
 import { useState, useContext } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link"; // 🔥 Importar Link para redirección
 import { AuthContext } from "./AuthContext";
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
@@ -37,8 +38,6 @@ const Login = () => {
       });
 
       const { token, user } = data.login;
-
-      // Llama a la función login de tu contexto para manejar el estado global
       auth?.login(token, user);
 
       alert("Inicio de sesión exitoso.");
@@ -50,12 +49,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
-        onSubmit={handleSubmit}
-      >
+      <form className="bg-white p-8 rounded-lg shadow-md w-full max-w-md" onSubmit={handleSubmit}>
         <h2 className="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700">Email</label>
           <input
@@ -67,10 +64,9 @@ const Login = () => {
             required
           />
         </div>
+
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Contraseña</label>
           <input
             type="password"
             name="password"
@@ -80,6 +76,7 @@ const Login = () => {
             required
           />
         </div>
+
         <button
           type="submit"
           className="bg-blue-500 text-white py-2 px-4 rounded-lg w-full hover:bg-blue-600"
@@ -87,6 +84,14 @@ const Login = () => {
         >
           {loading ? "Iniciando..." : "Iniciar Sesión"}
         </button>
+
+        {/* 🔥 Enlace para registrarse */}
+        <p className="text-sm text-gray-600 mt-4 text-center">
+          ¿No tienes cuenta?{" "}
+          <Link href="/register" className="text-blue-500 hover:underline">
+            Regístrate aquí
+          </Link>
+        </p>
       </form>
     </div>
   );

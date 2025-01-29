@@ -8,3 +8,17 @@ export const GET_CURRENT_USER = gql`
     }
   }
 `;
+
+export const UPDATE_USER = gql`
+  mutation UpdateUser($id: Int!, $name: String!, $phone: String!, $roleId: Int!) {
+    updateUser(id: $id, name: $name, phone: $phone, roleId: $roleId) {
+      id
+      name
+      phone
+      role {
+        id
+        name
+      }
+    }
+  }
+`;

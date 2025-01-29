@@ -2,31 +2,47 @@ import Sidebar from "./sidebar";
 import { useState, useContext } from "react";
 import { useMutation } from "@apollo/client";
 import { CREATE_TRANSACTION } from "../graphql/mutationTransaction";
-import { AuthContext } from "./AuthContext"; // Importamos el AuthContext
+import { GET_TRANSACTIONS } from "../graphql/queriesTransaction"; // 🔥 Importamos la query de transacciones
+import { AuthContext } from "./AuthContext"; 
+import { useRouter } from "next/router";
 
 const FormTransaction = () => {
-  const { user } = useContext(AuthContext); // Obtenemos el usuario autenticado desde el contexto
+  const { user } = useContext(AuthContext);
+  const router = useRouter();
   const [formData, setFormData] = useState({
     amount: "",
     concept: "",
     date: "",
-    transactionType: "Ingreso", // Valor inicial para el tipo de transacción
+    transactionType: "Ingreso",
   });
 
-  // Hook para ejecutar la mutación de creación
+  // Hook para ejecutar la mutación con actualización de caché
   const [createTransaction, { loading: creating, error: createError }] =
-    useMutation(CREATE_TRANSACTION);
+    useMutation(CREATE_TRANSACTION, {
+      refetchQueries: [{ query: GET_TRANSACTIONS }], // 🔥 Actualiza la tabla al instante
+      update: (cache, { data }) => {
+        if (data?.createTransaction) {
+          const newTransaction = data.createTransaction;
 
-  // Manejar los cambios en el formulario
+          // 🔥 Actualizar la caché manualmente sin recargar la página
+          cache.modify({
+            fields: {
+              transactions(existingTransactions = []) {
+                return [newTransaction, ...existingTransactions];
+              }
+            }
+          });
+        }
+      }
+    });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value,
+      [e.target.name]: e.target.value,
     });
   };
 
-  // Manejar el envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -36,25 +52,22 @@ const FormTransaction = () => {
     }
 
     try {
+      const amountValue = parseFloat(formData.amount);
+      const formattedAmount = formData.transactionType === "Egreso" ? -Math.abs(amountValue) : Math.abs(amountValue);
+
       const response = await createTransaction({
         variables: {
           concept: formData.concept,
-          amount: parseFloat(formData.amount),
+          amount: formattedAmount,
           date: formData.date,
           transactionType: formData.transactionType,
-          userId: user.id, // Tomamos el userId del usuario autenticado
+          userId: Number(user.id),
         },
       });
 
       if (response.data) {
         alert("Transacción creada exitosamente");
-        // Reiniciar el formulario
-        setFormData({
-          amount: "",
-          concept: "",
-          date: "",
-          transactionType: "Ingreso",
-        });
+        router.push("/tableTransaction"); // 🔥 Redirigir a la tabla de transacciones
       }
     } catch (err) {
       console.error("Error al crear transacción:", err);
@@ -63,25 +76,14 @@ const FormTransaction = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
       <Sidebar />
-
-      {/* Contenido principal */}
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold mb-4">Nuevo Movimiento de Dinero</h1>
-
-        {/* Formulario */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-gray-100 p-6 rounded-lg shadow-md max-w-md mx-auto"
-        >
+        <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded-lg shadow-md max-w-md mx-auto">
           <div className="mb-4">
-            <label htmlFor="amount" className="block text-gray-700 font-semibold mb-2">
-              Monto
-            </label>
+            <label className="block text-gray-700 font-semibold mb-2">Monto</label>
             <input
               type="number"
-              id="amount"
               name="amount"
               value={formData.amount}
               onChange={handleChange}
@@ -89,14 +91,10 @@ const FormTransaction = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             />
           </div>
-
           <div className="mb-4">
-            <label htmlFor="concept" className="block text-gray-700 font-semibold mb-2">
-              Concepto
-            </label>
+            <label className="block text-gray-700 font-semibold mb-2">Concepto</label>
             <input
               type="text"
-              id="concept"
               name="concept"
               value={formData.concept}
               onChange={handleChange}
@@ -104,14 +102,10 @@ const FormTransaction = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             />
           </div>
-
           <div className="mb-4">
-            <label htmlFor="date" className="block text-gray-700 font-semibold mb-2">
-              Fecha
-            </label>
+            <label className="block text-gray-700 font-semibold mb-2">Fecha</label>
             <input
               type="date"
-              id="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
@@ -119,13 +113,9 @@ const FormTransaction = () => {
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             />
           </div>
-
           <div className="mb-4">
-            <label htmlFor="transactionType" className="block text-gray-700 font-semibold mb-2">
-              Tipo de Transacción
-            </label>
+            <label className="block text-gray-700 font-semibold mb-2">Tipo de Transacción</label>
             <select
-              id="transactionType"
               name="transactionType"
               value={formData.transactionType}
               onChange={handleChange}
@@ -136,20 +126,10 @@ const FormTransaction = () => {
               <option value="Egreso">Egreso</option>
             </select>
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-            disabled={creating}
-          >
+          <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600" disabled={creating}>
             {creating ? "Creando..." : "Ingresar"}
           </button>
-
-          {createError && (
-            <p className="mt-4 text-red-500">
-              Error al crear la transacción: {createError.message}
-            </p>
-          )}
+          {createError && <p className="mt-4 text-red-500">Error al crear la transacción: {createError.message}</p>}
         </form>
       </div>
     </div>

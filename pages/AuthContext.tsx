@@ -1,7 +1,7 @@
-import { createContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useState, useEffect, ReactNode, useContext } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink, ApolloLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink, ApolloLink, from } from "@apollo/client";
 
 interface AuthContextType {
   user: any;
@@ -12,26 +12,27 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Configuración del Apollo Client
+// Configuración de Apollo Client
 const httpLink = new HttpLink({
-  uri: '/api/graphql', // URL del endpoint GraphQL
+  uri: "/api/graphql",
 });
 
 const authLink = new ApolloLink((operation, forward) => {
   const token = localStorage.getItem("token");
 
-  // Agregar el token al encabezado de autorización si existe
-  operation.setContext({
+  operation.setContext(({ headers = {} }) => ({
     headers: {
+      ...headers,
       Authorization: token ? `Bearer ${token}` : "",
     },
-  });
+  }));
 
-  return forward(operation); // Continuar con el siguiente middleware o el HttpLink
+  return forward(operation);
 });
 
+// Cliente de Apollo con caché
 const client = new ApolloClient({
-  link: ApolloLink.from([authLink, httpLink]), // Combina authLink con httpLink
+  link: from([authLink, httpLink]),
   cache: new InMemoryCache(),
 });
 
@@ -41,29 +42,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
 
   const login = async (token: string, user: any) => {
-    // Guarda el token en localStorage
     localStorage.setItem("token", token);
-    
-    // Establece el token en los encabezados de Axios
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-    // Actualiza el estado global con los datos del usuario
     setUser(user);
+    await client.resetStore(); // Limpiar caché al iniciar sesión
   };
 
-  const logout = () => {
-    // Elimina el token y limpia el estado
+  const logout = async () => {
     localStorage.removeItem("token");
     delete axios.defaults.headers.common["Authorization"];
     setUser(null);
-    router.push("/login");
+    await client.clearStore(); // Limpiar caché al cerrar sesión
+    router.replace("/login"); // 🔥 Redirigir al login al cerrar sesión
   };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
-      // Verifica si el token es válido (por ejemplo, obteniendo el usuario actual)
       axios
         .post("/api/graphql", {
           query: `
@@ -75,23 +71,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               }
             }
           `,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         })
         .then((response) => {
           if (response.data.errors) {
             console.error("Error al obtener usuario:", response.data.errors[0].message);
-            setLoading(false);
-            return;
+            setUser(null);
+          } else {
+            setUser(response.data.data.currentUser);
           }
-          setUser(response.data.data.currentUser);
-          setLoading(false);
         })
         .catch((err) => {
           console.error("Error al autenticar usuario:", err);
-          setLoading(false);
-        });
+          setUser(null);
+        })
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -100,8 +93,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ApolloProvider client={client}>
       <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
-        {loading ? <div>Cargando...</div> : children}
+        {loading ? <div className="flex justify-center items-center h-screen">Cargando...</div> : children}
       </AuthContext.Provider>
     </ApolloProvider>
   );
+};
+
+// Hook para acceder fácilmente al contexto de autenticación en otros componentes
+export const useAuth = () => useContext(AuthContext);
+
+// 🔥 **Nuevo Componente para Proteger Rutas**
+export const ProtectedRoute = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated, user } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user === null) {
+      setLoading(false);
+      router.replace("/login");
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, user, router]);
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Cargando...</div>;
+  }
+
+  return <>{children}</>;
 };
