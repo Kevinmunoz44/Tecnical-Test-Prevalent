@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link"; // 🔥 Importar Link para redirección
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 

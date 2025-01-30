@@ -3,7 +3,7 @@ import { useState, useContext } from "react";
 import { useMutation } from "@apollo/client";
 import { CREATE_TRANSACTION } from "../graphql/mutationTransaction";
 import { GET_TRANSACTIONS } from "../graphql/queriesTransaction"; // 🔥 Importamos la query de transacciones
-import { AuthContext } from "./AuthContext"; 
+import { AuthContext } from "../context/AuthContext"; 
 import { useRouter } from "next/router";
 
 const FormTransaction = () => {

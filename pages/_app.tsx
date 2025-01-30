@@ -1,5 +1,5 @@
 import "../styles/globals.css";
-import { AuthProvider, ProtectedRoute } from "./AuthContext";
+import { AuthProvider, ProtectedRoute } from "../context/AuthContext";
 import { useRouter } from "next/router";
 
 export default function App({ Component, pageProps }: any) {

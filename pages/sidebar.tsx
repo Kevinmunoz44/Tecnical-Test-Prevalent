@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useContext } from "react";
-import { AuthContext } from "./AuthContext";
+import { AuthContext } from "../context/AuthContext";
 
 const Sidebar = () => {
   const auth = useContext(AuthContext); // Accede al contexto de autenticación

@@ -3,7 +3,7 @@ import Sidebar from "./sidebar";
 import Link from "next/link";
 import { useQuery } from "@apollo/client";
 import { GET_TRANSACTIONS } from "../graphql/queriesTransaction";
-import { useAuth } from "./AuthContext"; // Importamos el hook de autenticación
+import { useAuth } from "../context/AuthContext"; // Importamos el hook de autenticación
 
 const TableTransaction = () => {
   const { user } = useAuth(); // Obtenemos el usuario autenticado
