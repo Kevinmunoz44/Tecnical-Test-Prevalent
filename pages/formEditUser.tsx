@@ -51,7 +51,6 @@ const FormEditUser = () => {
 
   const [updateUser, { loading: updating, error: updateError }] = useMutation(UPDATE_USER, {
     onCompleted: () => {
-      alert("Usuario actualizado correctamente");
       router.push("/tableUser"); // 🔥 Redirige a la tabla de usuarios
     },
     refetchQueries: [{ query: GET_USER_BY_ID, variables: { id: userId } }],

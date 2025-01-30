@@ -49,9 +49,6 @@ const TableUser = () => {
                     >
                       Editar
                     </button>
-                    <button className="bg-red-500 text-white py-1 px-3 rounded-md hover:bg-red-600">
-                      Eliminar
-                    </button>
                   </td>
                 </tr>
               ))}

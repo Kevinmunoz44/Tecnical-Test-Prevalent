@@ -40,7 +40,6 @@ const Login = () => {
       const { token, user } = data.login;
       auth?.login(token, user);
 
-      alert("Inicio de sesión exitoso.");
       router.push("/dashboard");
     } catch (err: any) {
       setError(mutationError?.message || "Error desconocido");

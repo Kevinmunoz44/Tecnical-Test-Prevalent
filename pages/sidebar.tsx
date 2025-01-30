@@ -47,14 +47,6 @@ const Sidebar = () => {
             </Link>
           </li>
           <li>
-            <Link
-              href="/dashboard/reportes"
-              className="block py-2 px-4 text-gray-700 hover:bg-gray-300 hover:text-black"
-            >
-              Reportes
-            </Link>
-          </li>
-          <li>
             {/* Botón de Cerrar Sesión */}
             <button
               onClick={auth?.logout} // Llama al método logout del contexto

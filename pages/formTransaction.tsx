@@ -66,8 +66,7 @@ const FormTransaction = () => {
       });
 
       if (response.data) {
-        alert("Transacción creada exitosamente");
-        router.push("/tableTransaction"); // 🔥 Redirigir a la tabla de transacciones
+        router.push("/tableTransaction");
       }
     } catch (err) {
       console.error("Error al crear transacción:", err);

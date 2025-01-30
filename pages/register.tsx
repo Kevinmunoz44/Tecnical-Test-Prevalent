@@ -41,8 +41,6 @@ const Register = () => {
       if (response.data.errors) {
         throw new Error(response.data.errors[0].message);
       }
-
-      alert("Registro exitoso. Redirigiendo al login...");
       router.push("/login");
     } catch (err: any) {
       setError(err.message || "Error desconocido");
