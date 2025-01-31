@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 export default function App({ Component, pageProps }: any) {
   const router = useRouter();
   const publicRoutes = ["/login", "/register"];
-  const isAuthRequired = !publicRoutes.includes(router.pathname); // 🔥 No proteger login y register
+  const isAuthRequired = !publicRoutes.includes(router.pathname);
 
   return (
     <AuthProvider>

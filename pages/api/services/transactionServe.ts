@@ -1,22 +1,55 @@
 import { PrismaClient } from "@prisma/client";
 
+// Instancia de Prisma Client para interactuar con la base de datos
 const prisma = new PrismaClient();
 
+/*
+ * Servicio para la gestión de transacciones.
+ * 
+ * - `getAllTransactions`: Obtiene todas las transacciones de un usuario.
+ * - `getTransactionById`: Obtiene una transacción específica del usuario.
+ * - `createTransaction`: Crea una nueva transacción y actualiza el saldo del usuario.
+ * - `updateTransaction`: Modifica una transacción y ajusta el saldo del usuario.
+ * - `deleteTransaction`: Elimina una transacción y revierte su efecto en el saldo.
+ */
 export const transactionService = {
+  
+  /*
+   * Obtener todas las transacciones de un usuario autenticado.
+   * - `userId`: Identificador único del usuario.
+   * - Retorna un array de transacciones asociadas al usuario.
+   */
   getAllTransactions: async (userId: number) => {
     return await prisma.transaction.findMany({
-      where: { userId: userId }, // Solo traer transacciones del usuario autenticado
+      where: { userId },
       include: { user: true },
     });
   },
 
+  /*
+   * Obtener una transacción específica del usuario autenticado.
+   * - `id`: Identificador de la transacción.
+   * - `userId`: Verifica que la transacción pertenece al usuario autenticado.
+   * - Retorna la transacción si existe.
+   */
   getTransactionById: async (id: number, userId: number) => {
     return await prisma.transaction.findFirst({
-      where: { id, userId }, // Asegurar que la transacción pertenece al usuario autenticado
+      where: { id, userId },
       include: { user: true },
     });
   },
 
+  /*
+   * Crear una nueva transacción y actualizar el saldo del usuario.
+   * - `concept`: Descripción de la transacción.
+   * - `amount`: Monto de la transacción.
+   * - `date`: Fecha de la transacción.
+   * - `transactionType`: Tipo de transacción ("Ingreso" o "Egreso").
+   * - `userId`: ID del usuario que realiza la transacción.
+   * - Valida saldo suficiente antes de registrar un egreso.
+   * - Ajusta el saldo del usuario después de la transacción.
+   * - Retorna la transacción creada.
+   */
   createTransaction: async (
     concept: string,
     amount: number,
@@ -24,11 +57,9 @@ export const transactionService = {
     transactionType: string,
     userId: number
   ) => {
-    // 🔥 Asegurar que el monto es positivo antes de procesarlo
     const transactionAmount =
       transactionType === "Egreso" ? -Math.abs(amount) : Math.abs(amount);
 
-    // 🔥 Buscar al usuario en la base de datos
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -37,38 +68,41 @@ export const transactionService = {
       throw new Error("Usuario no encontrado");
     }
 
-    // 🔥 Validar saldo suficiente antes de registrar un egreso
     if (transactionType === "Egreso" && user.amount < Math.abs(amount)) {
       throw new Error("Saldo insuficiente para realizar el egreso");
     }
 
-    // 🔥 Crear la transacción con el monto ajustado
     const transaction = await prisma.transaction.create({
       data: {
         concept,
-        amount: transactionAmount, // Asegurar que los egresos sean negativos
+        amount: transactionAmount,
         date,
         transactionType,
         user: {
           connect: { id: userId },
         },
       },
-      include: {
-        user: true,
-      },
+      include: { user: true },
     });
 
-    // 🔥 Actualizar el saldo del usuario
     await prisma.user.update({
       where: { id: userId },
       data: {
-        amount: user.amount + transactionAmount, // Suma ingresos, resta egresos
+        amount: user.amount + transactionAmount,
       },
     });
 
     return transaction;
   },
 
+  /*
+   * Actualizar una transacción existente y ajustar el saldo del usuario.
+   * - `id`: Identificador de la transacción.
+   * - `concept`, `amount`, `date`, `transactionType`: Datos opcionales para actualizar.
+   * - Recalcula el saldo del usuario con base en la nueva información.
+   * - Verifica que el saldo no sea negativo tras la actualización.
+   * - Retorna la transacción actualizada.
+   */
   updateTransaction: async (
     id: number,
     concept?: string,
@@ -78,7 +112,6 @@ export const transactionService = {
   ) => {
     const transactionId = Number(id);
 
-    // 🔥 Obtener la transacción existente
     const existingTransaction = await prisma.transaction.findUnique({
       where: { id: transactionId },
     });
@@ -87,7 +120,6 @@ export const transactionService = {
       throw new Error("Transacción no encontrada");
     }
 
-    // 🔥 Obtener el usuario
     const user = await prisma.user.findUnique({
       where: { id: existingTransaction.userId },
     });
@@ -96,13 +128,11 @@ export const transactionService = {
       throw new Error("Usuario no encontrado");
     }
 
-    // 🔥 Revertir el efecto de la transacción anterior en el saldo
     const previousAmountAdjustment =
       existingTransaction.transactionType === "Ingreso"
         ? existingTransaction.amount
         : -existingTransaction.amount;
 
-    // 🔥 Determinar el nuevo monto y ajuste
     const newAmountAdjustment =
       transactionType === "Ingreso"
         ? Math.abs(amount ?? existingTransaction.amount)
@@ -115,7 +145,6 @@ export const transactionService = {
       throw new Error("Saldo insuficiente para actualizar la transacción");
     }
 
-    // 🔥 Actualizar la transacción en la base de datos
     const transaction = await prisma.transaction.update({
       where: { id: transactionId },
       data: {
@@ -124,12 +153,9 @@ export const transactionService = {
         date,
         transactionType,
       },
-      include: {
-        user: true,
-      },
+      include: { user: true },
     });
 
-    // 🔥 Actualizar el saldo del usuario
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -140,10 +166,15 @@ export const transactionService = {
     return transaction;
   },
 
+  /*
+   * Eliminar una transacción y revertir su efecto en el saldo del usuario.
+   * - `id`: Identificador de la transacción a eliminar.
+   * - Recalcula el saldo del usuario tras eliminar la transacción.
+   * - Retorna la transacción eliminada.
+   */
   deleteTransaction: async (id: number) => {
     const transactionId = Number(id);
 
-    // 🔥 Obtener la transacción existente
     const existingTransaction = await prisma.transaction.findUnique({
       where: { id: transactionId },
     });
@@ -152,7 +183,6 @@ export const transactionService = {
       throw new Error("Transacción no encontrada");
     }
 
-    // 🔥 Obtener al usuario
     const user = await prisma.user.findUnique({
       where: { id: existingTransaction.userId },
     });
@@ -161,18 +191,15 @@ export const transactionService = {
       throw new Error("Usuario no encontrado");
     }
 
-    // 🔥 Ajustar el saldo del usuario
     const adjustment =
       existingTransaction.transactionType === "Ingreso"
         ? -existingTransaction.amount
         : existingTransaction.amount;
 
-    // 🔥 Eliminar la transacción
     const transaction = await prisma.transaction.delete({
       where: { id: transactionId },
     });
 
-    // 🔥 Actualizar el saldo del usuario
     await prisma.user.update({
       where: { id: user.id },
       data: {

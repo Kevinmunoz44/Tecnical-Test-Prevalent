@@ -5,7 +5,7 @@ import Sidebar from "./sidebar";
 import { UPDATE_USER } from "../graphql/mutationUser";
 import { gql } from "@apollo/client";
 
-// 🔥 Query para obtener el usuario por ID
+//  Query para obtener el usuario por ID
 const GET_USER_BY_ID = gql`
   query GetUserById($id: ID!) {
     user(id: $id) {
@@ -20,7 +20,7 @@ const GET_USER_BY_ID = gql`
   }
 `;
 
-// 🔥 Query para obtener todos los roles disponibles
+//  Query para obtener todos los roles disponibles
 const GET_ROLES = gql`
   query GetRoles {
     roles {
@@ -34,13 +34,13 @@ const FormEditUser = () => {
   const router = useRouter();
   const userId = router.query.id ? String(router.query.id) : "";
 
-  // Obtener datos del usuario
+  //  Obtener datos del usuario
   const { data, loading, error } = useQuery(GET_USER_BY_ID, {
     variables: { id: userId },
     skip: !userId,
   });
 
-  // Obtener lista de roles
+  //  Obtener lista de roles
   const { data: rolesData, loading: rolesLoading } = useQuery(GET_ROLES);
 
   const [formData, setFormData] = useState({
@@ -50,32 +50,31 @@ const FormEditUser = () => {
   });
 
   const [updateUser, { loading: updating, error: updateError }] = useMutation(UPDATE_USER, {
-    onCompleted: () => {
-      router.push("/tableUser"); // 🔥 Redirige a la tabla de usuarios
-    },
+    onCompleted: () => router.push("/tableUser"), // 🔹 Redirige tras la actualización
     refetchQueries: [{ query: GET_USER_BY_ID, variables: { id: userId } }],
   });
 
+  // Cargar datos del usuario en el formulario
   useEffect(() => {
-    if (data && data.user) {
+    if (data?.user) {
       setFormData({
-        name: data.user.name,
-        phone: data.user.phone,
-        roleId: data.user.role.id, // 🔥 Cargar el ID del rol en el formulario
+        name: data.user.name || "",
+        phone: data.user.phone || "",
+        roleId: data.user.role?.id || "",
       });
     }
   }, [data]);
 
+  //  Manejo de cambios en el formulario
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  //  Manejo del envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) {
-      alert("ID de usuario inválido.");
-      return;
-    }
+    if (!userId) return alert("ID de usuario inválido.");
+
     try {
       await updateUser({
         variables: {
@@ -90,8 +89,9 @@ const FormEditUser = () => {
     }
   };
 
+  // Mostrar carga o errores si ocurren
   if (loading || rolesLoading) return <p>Cargando datos...</p>;
-  if (error) return <p>Error al obtener usuario: {error.message}</p>;
+  if (error) return <p className="text-red-500">Error al obtener usuario: {error.message}</p>;
 
   return (
     <div className="flex h-screen">
@@ -99,6 +99,7 @@ const FormEditUser = () => {
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold mb-4">Editar Usuario</h1>
         <form onSubmit={handleSubmit} className="bg-gray-100 p-6 rounded-lg shadow-md max-w-md mx-auto">
+          {/* 🔹 Campo de Nombre */}
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">Nombre</label>
             <input
@@ -111,6 +112,7 @@ const FormEditUser = () => {
             />
           </div>
 
+          {/* 🔹 Campo de Teléfono */}
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">Teléfono</label>
             <input
@@ -123,7 +125,7 @@ const FormEditUser = () => {
             />
           </div>
 
-          {/* 🔥 Select para elegir el rol */}
+          {/* 🔹 Select para elegir el rol */}
           <div className="mb-4">
             <label className="block text-gray-700 font-semibold mb-2">Rol</label>
             <select
@@ -134,7 +136,7 @@ const FormEditUser = () => {
               required
             >
               <option value="">Seleccione un rol</option>
-              {rolesData.roles.map((role: any) => (
+              {rolesData.roles.map((role: { id: string; name: string }) => (
                 <option key={role.id} value={role.id}>
                   {role.name}
                 </option>
@@ -142,9 +144,16 @@ const FormEditUser = () => {
             </select>
           </div>
 
-          <button type="submit" className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600" disabled={updating}>
+          {/*  Botón de actualización */}
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+            disabled={updating}
+          >
             {updating ? "Actualizando..." : "Actualizar"}
           </button>
+
+          {/*  Mostrar error si ocurre */}
           {updateError && <p className="mt-4 text-red-500">Error: {updateError.message}</p>}
         </form>
       </div>

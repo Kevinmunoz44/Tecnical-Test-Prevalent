@@ -2,6 +2,14 @@ import Link from "next/link";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
+/*
+ * Componente de barra lateral (Sidebar).
+ *
+ * - Muestra la información del usuario autenticado.
+ * - Proporciona enlaces de navegación a diferentes secciones de la aplicación.
+ * - Incluye un botón para cerrar sesión llamando al método `logout` del contexto.
+ */
+
 const Sidebar = () => {
   const auth = useContext(AuthContext); // Accede al contexto de autenticación
 

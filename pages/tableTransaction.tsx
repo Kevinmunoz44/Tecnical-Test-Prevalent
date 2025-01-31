@@ -3,12 +3,22 @@ import Sidebar from "./sidebar";
 import Link from "next/link";
 import { useQuery } from "@apollo/client";
 import { GET_TRANSACTIONS } from "../graphql/queriesTransaction";
-import { useAuth } from "../context/AuthContext"; // Importamos el hook de autenticación
+import { useAuth } from "../context/AuthContext";
+
+/*
+ * Componente para mostrar la tabla de transacciones del usuario autenticado.
+ *
+ * - Obtiene las transacciones mediante Apollo Client y GraphQL.
+ * - Filtra las transacciones para mostrar solo las del usuario autenticado.
+ * - Calcula y muestra el total de ingresos y egresos.
+ */
 
 const TableTransaction = () => {
-  const { user } = useAuth(); // Obtenemos el usuario autenticado
+  const { user } = useAuth(); // Obtener el usuario autenticado
+
+  // Consulta para obtener transacciones, se omite si no hay usuario autenticado
   const { data, loading, error } = useQuery(GET_TRANSACTIONS, {
-    skip: !user, // No ejecutar la consulta si no hay usuario autenticado
+    skip: !user,
   });
 
   if (loading) return <p>Cargando transacciones...</p>;
@@ -16,10 +26,10 @@ const TableTransaction = () => {
 
   const transactions = data?.transactions ?? [];
 
-  // Filtrar transacciones para asegurarnos de que sean del usuario autenticado
+  // Filtrar transacciones para mostrar solo las del usuario autenticado
   const userTransactions = transactions.filter((t: any) => t.user.id === user.id);
 
-  // Calcular el monto total del usuario autenticado
+  // Calcular el monto total de transacciones
   const total = userTransactions.reduce(
     (acc: number, transaction: any) => acc + transaction.amount,
     0
@@ -41,6 +51,7 @@ const TableTransaction = () => {
           </Link>
         </div>
 
+        {/* Tabla de transacciones */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300">
             <thead className="bg-gray-200">
@@ -70,6 +81,7 @@ const TableTransaction = () => {
           </table>
         </div>
 
+        {/* Sección de Total */}
         <div className="flex justify-end mt-4">
           <div className="bg-gray-100 p-4 rounded-lg shadow-md">
             <span className="font-bold text-gray-700">Total:</span>

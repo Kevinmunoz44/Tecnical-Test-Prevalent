@@ -4,16 +4,23 @@ import Sidebar from "./sidebar";
 import { useQuery } from "@apollo/client";
 import { GET_USERS } from "../graphql/queriesUser";
 
+/*
+ * Componente para mostrar la tabla de usuarios.
+ *
+ * - Obtiene los usuarios mediante Apollo Client y GraphQL.
+ * - Permite redirigir al formulario de edición de usuario.
+ */
+
 const TableUser = () => {
   const { data, loading, error } = useQuery(GET_USERS);
   const router = useRouter();
 
   if (loading) return <p>Cargando usuarios...</p>;
-  if (error) return <p>Error al cargar los usuarios: {error.message}</p>;
+  if (error) return <p className="text-red-500">Error al cargar los usuarios: {error.message}</p>;
 
-  const users = data.users;
+  const users = data?.users ?? [];
 
-  // 🔥 Redirigir al formulario de edición
+  // Redirigir al formulario de edición con el ID del usuario
   const handleEdit = (id: number) => {
     router.push(`/formEditUser?id=${id}`);
   };
@@ -24,6 +31,7 @@ const TableUser = () => {
       <div className="flex-1 p-8">
         <h1 className="text-2xl font-bold mb-4">Sistema de gestión de Usuarios</h1>
 
+        {/* Tabla de usuarios */}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-gray-300">
             <thead className="bg-gray-200">

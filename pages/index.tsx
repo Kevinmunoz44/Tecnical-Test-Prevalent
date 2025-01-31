@@ -5,6 +5,7 @@ import Link from "next/link";
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // Verifica si el usuario tiene un token almacenado en localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -12,6 +13,7 @@ export default function Home() {
     }
   }, []);
 
+  // Si el usuario está autenticado, mostrar el dashboard
   if (isAuthenticated) {
     return <Dashboard />;
   }
